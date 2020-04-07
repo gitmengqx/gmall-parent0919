@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!--namespace 接口全路径-->
+<mapper namespace="com.atguigu.gmall.product.mapper.SpuSaleAttrMapper">
+    <resultMap id="spuSaleAttrMap" type="com.atguigu.gmall.model.product.SpuSaleAttr" autoMapping="true">
+        <id property="id" column="id"></id>
+        <!--配置mybatis 1：n -->
+        <collection property="spuSaleAttrValueList" ofType="com.atguigu.gmall.model.product.SpuSaleAttrValue" autoMapping="true">
+            <!--如果有Id 重复需要起别名-->
+            <id property="id" column="sale_attr_value_id"></id>
+        </collection>
+    </resultMap>
+
+    <!--mybatis 中有个sql 片段 以后做部分引用-->
+    <sql id="spuSaleAttr">
+          ssa.id ,
+          ssa.spu_id,
+          ssa.base_sale_attr_id,
+          ssa.sale_attr_name,
+          ssav.id sale_attr_value_id,
+          ssav.sale_attr_value_name
+    </sql>
+
+    <select id="selectSpuSaleAttrList" resultMap="spuSaleAttrMap">
+      SELECT
+        <include refid="spuSaleAttr"></include>
+        FROM spu_sale_attr ssa INNER JOIN spu_sale_attr_value ssav ON
+        ssa.spu_id = ssav.spu_id AND ssa.base_sale_attr_id = ssav.base_sale_attr_id
+        WHERE ssa.spu_id = #{spu_id}
+
+    </select>
+
+    <!--根据skuId，spuId 查询数据-->
+    <select id="selectSpuSaleAttrListCheckBySku" resultMap="spuSaleAttrMap">
+             SELECT sa.id ,sa.spu_id, sa.sale_attr_name,sa.base_sale_attr_id,
+                sv.id sale_attr_value_id,
+                sv.sale_attr_value_name,
+                skv.sku_id,
+                IF(skv.sku_id IS NULL,0,1)  is_checked
+                FROM spu_sale_attr sa
+                INNER JOIN spu_sale_attr_value  sv ON  sa.spu_id=sv.spu_id AND sa.base_sale_attr_id=sv.base_sale_attr_id
+                LEFT JOIN sku_sale_attr_value skv ON skv.sale_attr_value_id= sv.id AND skv.sku_id=#{skuId}
+                WHERE  sa.spu_id=#{spuId}
+                ORDER BY sv.base_sale_attr_id,sv.id
+    </select>
+</mapper>
