@@ -183,7 +183,8 @@ public class SeckillGoodsController {
         if (null == orderRecode){
             return Result.fail().message("下单失败!");
         }
-        // 如果没有用户Id 将用户赋值！如果有了，不需要赋值了。  orderRecode.setUserId(userId);
+        // 如果没有用户Id 将用户赋值！如果有了，不需要赋值了。
+        orderRecode.setUserId(userId);
         // 提交订单方法
         Long orderId = orderFeignClient.submitOrder(orderInfo);
 

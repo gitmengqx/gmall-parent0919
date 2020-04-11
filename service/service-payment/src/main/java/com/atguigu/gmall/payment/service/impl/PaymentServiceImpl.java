@@ -121,6 +121,6 @@ public class PaymentServiceImpl implements PaymentService {
         paymentInfoMapper.update(paymentInfo,paymentInfoQueryWrapper);
 
         // 关闭支付宝中支付交易
-        alipayService.closePay(orderId);
+        // alipayService.closePay(orderId);
     }
 }

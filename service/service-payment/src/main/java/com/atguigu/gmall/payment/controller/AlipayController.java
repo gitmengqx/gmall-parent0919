@@ -5,16 +5,14 @@ import com.alipay.api.internal.util.AlipaySignature;
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.enums.PaymentType;
+import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.payment.config.AlipayConfig;
 import com.atguigu.gmall.payment.service.AlipayService;
 import com.atguigu.gmall.payment.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -126,4 +124,16 @@ public class AlipayController {
         boolean flag = alipayService.checkPayment(orderId);
         return flag;
     }
+
+    @GetMapping("getPaymentInfo/{outTradeNo}")
+    @ResponseBody
+    public PaymentInfo getPaymentInfo(@PathVariable String outTradeNo){
+        PaymentInfo paymentInfo = paymentService.getPaymentInfo(outTradeNo, PaymentType.ALIPAY.name());
+        if (null!=paymentInfo){
+            return paymentInfo;
+        }
+        return null;
+    }
+
+
 }

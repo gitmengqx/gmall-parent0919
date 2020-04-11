@@ -7,6 +7,14 @@ mybatis-plus:
   mapper-locations: classpath:mapper/*Mapper.xml # 编写复杂的sql 语句 ，mybatis-plus 对多表关联支持性差。手写xml文件{sql语句}
 
 spring:
+  zipkin:
+    base-url: http://192.168.200.128:9411
+    discovery-client-enabled: false
+    sender:
+      type: web
+  sleuth:
+    sampler:
+      probability: 1
   cloud:
     sentinel:
       transport:

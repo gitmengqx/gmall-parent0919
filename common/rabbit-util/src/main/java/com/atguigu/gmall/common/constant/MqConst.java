@@ -25,7 +25,7 @@ public class MqConst {
     //取消订单 延迟时间 单位：秒
 //    public static final int DELAY_TIME  = 24*60*60;
 //    测试使用
-    public static final int DELAY_TIME  = 10;
+    public static final int DELAY_TIME  = 30;
     /**
      * 订单支付
      */

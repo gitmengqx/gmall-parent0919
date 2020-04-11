@@ -2,9 +2,13 @@ package com.atguigu.gmall.order.receiver;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.common.constant.MqConst;
+import com.atguigu.gmall.common.service.RabbitService;
+import com.atguigu.gmall.model.enums.PaymentStatus;
 import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
+import com.atguigu.gmall.model.payment.PaymentInfo;
 import com.atguigu.gmall.order.service.OrderService;
+import com.atguigu.gmall.payment.client.PaymentFeignClient;
 import com.rabbitmq.client.Channel;
 import lombok.SneakyThrows;
 import org.springframework.amqp.core.Message;
@@ -27,34 +31,52 @@ public class OrderReceiver {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private RabbitService rabbitService;
+
+    @Autowired
+    private PaymentFeignClient paymentFeignClient;
     // 获取监听到的消息队列
     @SneakyThrows
     @RabbitListener(queues = MqConst.QUEUE_ORDER_CANCEL)
     public void orderCancel(Long orderId , Message message, Channel channel){
         if (orderId!=null){
-            // 那么如果当前的订单已经付完款了。
-            // 判断当前订单的状态！当前订单状态是为付款，order_status UNPAID 这个时候才关闭订单！
-            // 先查询一下当前的订单！
-            // 扩展：判断当前订单是否真正的支付{在支付宝中是否有交易记录。双保险！}
+            // 根据订单Id 查询订单记录
             OrderInfo orderInfo = orderService.getById(orderId);
-            /**
-             *  面试可能会问你，关单的业务逻辑！
-             *  判断 paymentInfo 中有没有交易记录，是否是未付款！
-             *  判断 orderInfo 订单的状态
-             *  判断在支付宝中是否有交易记录。
-             *  如果有交易记录{扫描了二维码} alipayService.checkPayment(orderId)
-             *  如果在支付宝中有交易记录，调用关闭支付的订单接口。如果正常关闭了，那么说明，用户根本没有付款。如果关闭失败。
-             *      说明用户已经付款成功了。 发送消息队列更新订单的状态！ 通知仓库，减库存。
-             *      rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_PAYMENT_PAY,MqConst.ROUTING_PAYMENT_PAY,paymentInfo.getOrderId());
-             *  关闭订单：
-             *      1.  用户没有点到付款，二维码都没有出现。
-             *      2.  系统出现了二维码，但是用户并没有扫描。
-             *      3.  系统出现了二维码，用户扫了，但是没有输入密码。
-             */
 
-            if (orderInfo!=null && orderInfo.getOrderStatus().equals(ProcessStatus.UNPAID.getOrderStatus().name())){
-                // 修改订单的状态！订单的状态变成CLOSED
-                orderService.execExpiredOrder(orderId);
+            if (null!= orderInfo){
+                PaymentInfo paymentInfo = paymentFeignClient.getPaymentInfo(orderInfo.getOutTradeNo());
+                // 先检查支付交易记录
+                if (null!=paymentInfo && paymentInfo.getPaymentStatus().equals(PaymentStatus.UNPAID.name())){
+                    // 关闭支付宝,先判断是否有交易记录。如果有交易记录，没有付款成功那么才能关闭成功！否则关闭失败。
+                    Boolean flag = paymentFeignClient.checkPayment(orderId);
+                    // 如果返回true ，则说明有交易记录
+                    if (flag){
+                        // 有交易记录，那么才调用关闭支付接口
+                        Boolean result = paymentFeignClient.closePay(orderInfo.getId());
+                        // 如果关闭成功，则说明用户没有付款，
+                        if (result){
+                            // 关闭交易记录状态，更改订单状态。
+                            orderService.execExpiredOrder(orderId,"2");
+                        }else {
+                            // 说明没有关闭成功，那么一定是用户付款了。
+                            // 发送支付成功的消息队列。
+                            rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_PAYMENT_PAY,MqConst.ROUTING_PAYMENT_PAY,paymentInfo.getOrderId());
+                        }
+                    }else {
+                        // 用户生成了二维码，但是没有扫描。
+                        orderService.execExpiredOrder(orderId,"2");
+                    }
+                } else{
+                  /*
+                   支付交易记录中为空，那么说明用户根本没有生成付款码。没有生成付款码，那么可能下单了。
+                   所以关闭订单的状态
+                   */
+                    if (orderInfo.getOrderStatus().equals(ProcessStatus.UNPAID.getOrderStatus().name())){
+                        orderService.execExpiredOrder(orderId,"1");
+                    }
+                }
             }
         }
         // 手动ack

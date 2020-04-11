@@ -17,6 +17,7 @@
         <module>service-user-client</module>
         <module>service-order-client</module>
         <module>service-activity-client</module>
+        <module>service-payment-client</module>
     </modules>
 
     <artifactId>service-client</artifactId>

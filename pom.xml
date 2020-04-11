@@ -15,6 +15,7 @@
         <module>service-client</module>
         <module>web</module>
     </modules>
+
     <!--没规定我们使用哪个版本的spring boot-->
     <parent>
         <groupId>org.springframework.boot</groupId>

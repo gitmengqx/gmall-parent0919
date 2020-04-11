@@ -18,6 +18,14 @@ spring:
     sentinel:
       transport:
         dashboard: http://192.168.200.128:8858
+  zipkin:
+    base-url: http://192.168.200.128:9411
+    discovery-client-enabled: false
+    sender:
+      type: web
+    sleuth:
+      sampler:
+        probability: 1
   rabbitmq:
     host: 192.168.200.128
     port: 5672
