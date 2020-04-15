@@ -37,11 +37,11 @@
             <version>3.11.2</version>
         </dependency>
 
-        <!-- 服务调用feign -->
+        <!--mybatis-plus-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <scope>provided </scope>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

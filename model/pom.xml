@@ -21,7 +21,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <scope>provided </scope>
+            <scope>provided</scope>
         </dependency>
 
         <!--swagger-->
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-            <scope>provided </scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
